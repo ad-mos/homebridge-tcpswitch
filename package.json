@@ -12,7 +12,7 @@
   "keywords": [
     "homebridge-plugin",
     "tcpswitch",
-    "switch",
+    "switch"
   ],
   "main": "index.js",
   "engines": {
