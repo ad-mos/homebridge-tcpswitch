@@ -28,6 +28,7 @@ TcpSwitch.prototype = {
             console.log(data[0]);
             if (data[0] === 83) {
                 setTimeout(function(){
+                    var arr = [];
                     if (value < 10)
                         arr = [0x72, 0x30 + value, 0x0a, 0x0a];
                     else
