@@ -1,0 +1,26 @@
+{
+  "name": "homebridge-tcpswitch",
+  "version": "0.0.1",
+  "author": "aildermi",
+  "description": "Simple TCP switche for Homebridge - stateful switch",
+  "license": "MIT",
+  "homepage": "https://github.com/aildermi/homebridge-tcpswitch#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aildermi/homebridge-tcpswitch.git"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "tcpswitch",
+    "switch",
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {},
+  "bugs": {
+    "url": "https://github.com/aildermi/homebridge-tcpswitch/issues"
+  }
+}

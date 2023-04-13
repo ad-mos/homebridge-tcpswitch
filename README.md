@@ -1,0 +1,3 @@
+# homebridge-tcpswitch
+Simple TCP switches for Homebridge
+_________________________________________
