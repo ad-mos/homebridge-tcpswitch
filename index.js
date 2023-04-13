@@ -57,7 +57,7 @@ TcpSwitch.prototype = {
 
 
         this.tcpRequest(this.host, this.port, this.value, function(result) {
-            switchService.getCharacteristic(Characteristic.On).setValue(result&value==0, undefined, 'fromSetPowerState');
+            // switchService.getCharacteristic(Characteristic.On).setValue(result&value==0, undefined, 'fromSetPowerState');
         }.bind(this));
     },
 
