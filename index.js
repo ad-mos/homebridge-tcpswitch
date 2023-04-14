@@ -69,6 +69,8 @@ class TcpSwitch {
             var switchValue = result[1] & 0x0F;
             var switchState = result[2] & 0x0F == 0x0e;
             switchStates[switchValue] = switchState;
+            console.log("setting" + switchValue + " to " + switchState);
+            console.log(switchStates);
             callback(null);
         });
     }
