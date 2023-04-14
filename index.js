@@ -52,11 +52,13 @@ class TcpSwitch {
                 responseCallback(data);
             }
         });
-        var $this = this;
-        this.client.on('close', function(){
-            $this.log('Connection closed');
-            $this.connect();
-        });
+        if(init) {
+            var $this = this;
+            this.client.on('close', function(){
+                $this.log('Connection closed. Reconnecting...');
+                $this.connect();
+            });
+        }
     }
 
     tcpRequest (value, callback) {
@@ -69,7 +71,7 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
-            this.log('Reconnecting...');
+            this.log('Error writing. Reconnecting...');
             this.connect();
         }
     }
