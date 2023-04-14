@@ -53,7 +53,7 @@ class TcpSwitch {
             if (value < 10)
                 arr = [0x72, 0x30 + value, 0x0a, 0x0a];
             else
-                arr = [0x72, 0x31, 0x2F + value, 0x0a, 0x0a];
+                arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
             this.client.connect(this.port, this.host);
