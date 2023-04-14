@@ -71,8 +71,8 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
-            this.log('Error writing. Reconnecting...');
-            this.connect();
+            this.log('Error writing. Destroyin connection...');
+            this.client.destroy();
         }
     }
 
