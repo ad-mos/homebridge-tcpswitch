@@ -53,8 +53,8 @@ class TcpSwitch {
 
     getServices () {
         const informationService = new Service.AccessoryInformation()
-            .setCharacteristic(Characteristic.Manufacturer, 'TcpSocket')
-            .setCharacteristic(Characteristic.Model, 'TcpSocket');
+            .setCharacteristic(Characteristic.Manufacturer, 'TcpSwitch')
+            .setCharacteristic(Characteristic.Model, 'TcpSwitch');
 
         this.service.getCharacteristic(Characteristic.On)
             .on('get', this.getOnCharacteristicHandler.bind(this))
