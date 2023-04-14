@@ -2,9 +2,12 @@
 
 var Service;
 var Characteristic;
+const { throws } = require('assert');
 var net = require('net');
 var clients = {};
 var switchStates = {};
+var responseCallback = function() {};
+
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -22,26 +25,41 @@ class TcpSwitch {
         this.value               = config.value || 1
         switchStates[this.value] = false;
         //
-        var clientKey = this.host + ":" + this.port;
-        if (clientKey in clients)
-            this.client = clients[clientKey];
-        else {
-            this.client = clients[clientKey] = new net.Socket();
-            this.client.connect(this.port, this.host);
-            this.client.on('data', function(data) {
-                if (data[0] == 0x53) {
-                    var dataString = data.toString();
-                    dataString = dataString.substr(dataString.indexOf("&f")+1);
-                    for (var i = 1; i < dataString.length && i < 13; i++){
-                        switchStates[i] = (dataString[i] == '1');
-                    }
-                }
-            });
-        }
+        this.connect(true);
 
         this.service = new Service.Switch(this.name);
     }
+
+    connect (init) {
+        var clientKey = this.host + ":" + this.port;
+        if (init === true) {
+            if (clientKey in clients) {
+                this.client = clients[clientKey];
+                return;
+            }
+        }
+        this.log('Connecting...');
+        this.client = clients[clientKey] = new net.Socket();
+        this.client.connect(this.port, this.host);
+        this.client.on('data', function(data) {
+            if (data[0] == 0x53) {
+                var dataString = data.toString();
+                dataString = dataString.substr(dataString.indexOf("&f")+1);
+                for (var i = 1; i < dataString.length && i < 13; i++){
+                    switchStates[i] = (dataString[i] == '1');
+                }
+            } else {
+                responseCallback(data);
+            }
+        });
+        this.client.on('close', function(){
+            this.log('Connection closed');
+            this.connect();
+        });
+    }
+
     tcpRequest (value, callback) {
+        responseCallback = callback;
         try {
             var arr = [];
             if (value < 10)
@@ -51,7 +69,7 @@ class TcpSwitch {
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
             this.log('Reconnecting...');
-            this.client.connect(this.port, this.host);
+            this.connect();
         }
     }
 
