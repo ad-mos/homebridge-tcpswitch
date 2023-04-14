@@ -36,7 +36,7 @@ class TcpSwitch {
                 return;
             }
         }
-        console.log('Connecting...');
+        this.log('Connecting...');
         this.client = clients[clientKey] = new net.Socket();
         this.client.connect(this.port, this.host);
         this.client.on('data', function(data) {
@@ -49,7 +49,7 @@ class TcpSwitch {
             }
         });
         this.client.on('close', function(){
-            console.log('Connection closed');
+            this.log('Connection closed');
             this.connect();
         });
     }
@@ -63,7 +63,7 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
-            console.log('Reconnecting...');
+            this.log('Reconnecting...');
             this.connect();
         }
     }
