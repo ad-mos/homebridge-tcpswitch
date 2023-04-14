@@ -27,6 +27,7 @@ function TcpSwitch(log, config) {
         this.client = clients[clientKey] = new net.Socket();
         this.client.connect(this.port, this.host);
         this.client.on('data', function(data) {
+            console.log(data.toString());
             console.log(data);
             responseCallback(data);
         });
