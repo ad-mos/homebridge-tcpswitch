@@ -4,7 +4,6 @@ var Service;
 var Characteristic;
 var net = require('net');
 var clients = {};
-var responseCallback = function() {};
 var switchStates = {};
 
 module.exports = function (homebridge) {
@@ -36,8 +35,6 @@ class TcpSwitch {
                     for (var i = 1; i < dataString.length && i < 13; i++){
                         switchStates[i] = (dataString[i] == '1');
                     }
-                } else {
-                    responseCallback(data);
                 }
             });
         }
@@ -45,7 +42,6 @@ class TcpSwitch {
         this.service = new Service.Switch(this.name);
     }
     tcpRequest (value, callback) {
-        responseCallback = callback
         try {
             var arr = [];
             if (value < 10)
@@ -54,6 +50,7 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
+            console.log('Reconnecting...');
             this.client.connect(this.port, this.host);
         }
     }
