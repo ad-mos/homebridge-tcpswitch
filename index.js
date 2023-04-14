@@ -3,6 +3,8 @@
 var Service;
 var Characteristic;
 var net = require('net');
+var clients = {};
+var responseCallback = function() {};
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -17,21 +19,24 @@ function TcpSwitch(log, config) {
     this.host            = config.host;
     this.port            = config.port || 6269;
     this.value           = config.value || 1
-
-    this.client          = new net.Socket();
     //
-    this.client.connect(this.port, this.host);
-    this.responseCallback = function(){}
-    this.client.on('data', function(data) {
-        console.log(data);
-        this.responseCallback(data);
-    });
+    var clientKey = this.host + ":" + this.port;
+    if (clientKey in clients)
+        this.client = clients[clientKey];
+    else {
+        this.client = clients[clientKey] = new net.Socket();
+        this.client.connect(this.port, this.host);
+        this.client.on('data', function(data) {
+            console.log(data);
+            responseCallback(data);
+        });
+    }
 }
 
 TcpSwitch.prototype = {
 
     tcpRequest: function(host, port, value, callback) {
-        this.responseCallback = callback
+        responseCallback = callback
         try {
             var arr = [];
             if (value < 10)
@@ -46,17 +51,13 @@ TcpSwitch.prototype = {
 
     setPowerState: function(targetService, powerState, callback, context) {
         var funcContext = 'fromSetPowerState';
-        var payload;
-
         // Callback safety
         if (context == funcContext) {
             if (callback) {
                 callback();
             }
-
             return;
         }
-
 
         this.tcpRequest(this.host, this.port, this.value, function(result) {
             console.log("====");
