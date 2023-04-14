@@ -32,7 +32,15 @@ class TcpSwitch {
             this.client.on('data', function(data) {
                 console.log(data.toString());
                 console.log(data);
-                responseCallback(data);
+                if (data[0] == 0x53) {
+                    dataString = data.toString();
+                    dataString = dataString.substr(dataString.indexOf("&f")+1);
+                    for (var i = 1; i < dataString.length && i < 13; i++){
+                        switchStates[i] = (dataString[i] == '1');
+                    }
+                } else {
+                    responseCallback(data);
+                }
             });
         }
 
@@ -67,9 +75,9 @@ class TcpSwitch {
     setOnCharacteristicHandler (value, callback) {
         this.tcpRequest(this.value, function(result){
             var switchValue = result[1] & 0x0F;
-            var switchState = result[2] & 0x0F == 0x0e;
+            var switchState = (result[2] & 0x0F) == 0x0e;
             switchStates[switchValue] = switchState;
-            console.log("setting" + switchValue + " to " + switchState);
+            console.log("setting " + switchValue + " to " + switchState);
             console.log(switchStates);
             callback(null);
         });
