@@ -61,7 +61,7 @@ TcpSwitch.prototype = {
 
         this.tcpRequest(this.host, this.port, this.value, function(result) {
             console.log("====");
-            console.log(value);
+            console.log(this.value);
             console.log(result);
             console.log("====");
             // targetService.getCharacteristic(Characteristic.On).setValue(result, undefined, funcContext);
