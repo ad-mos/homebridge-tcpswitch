@@ -33,7 +33,7 @@ class TcpSwitch {
                 console.log(data.toString());
                 console.log(data);
                 if (data[0] == 0x53) {
-                    dataString = data.toString();
+                    var dataString = data.toString();
                     dataString = dataString.substr(dataString.indexOf("&f")+1);
                     for (var i = 1; i < dataString.length && i < 13; i++){
                         switchStates[i] = (dataString[i] == '1');
