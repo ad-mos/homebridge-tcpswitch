@@ -30,8 +30,6 @@ class TcpSwitch {
             this.client = clients[clientKey] = new net.Socket();
             this.client.connect(this.port, this.host);
             this.client.on('data', function(data) {
-                console.log(data.toString());
-                console.log(data);
                 if (data[0] == 0x53) {
                     var dataString = data.toString();
                     dataString = dataString.substr(dataString.indexOf("&f")+1);
@@ -77,8 +75,6 @@ class TcpSwitch {
             var switchValue = result[1] & 0x0F;
             var switchState = (result[2] & 0x0F) == 0x0e;
             switchStates[switchValue] = switchState;
-            console.log("setting " + switchValue + " to " + switchState);
-            console.log(switchStates);
             callback(null);
         });
     }
