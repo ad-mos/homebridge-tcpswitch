@@ -48,10 +48,6 @@ class TcpSwitch {
                 }
             }
         });
-        this.client.on('close', function(){
-            this.log('Connection closed');
-            this.connect();
-        });
     }
 
     tcpRequest (value, callback) {
