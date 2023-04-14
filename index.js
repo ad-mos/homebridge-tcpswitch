@@ -2,6 +2,7 @@
 
 var Service;
 var Characteristic;
+const { throws } = require('assert');
 var net = require('net');
 var clients = {};
 var switchStates = {};
@@ -22,25 +23,37 @@ class TcpSwitch {
         this.value               = config.value || 1
         switchStates[this.value] = false;
         //
-        var clientKey = this.host + ":" + this.port;
-        if (clientKey in clients)
-            this.client = clients[clientKey];
-        else {
-            this.client = clients[clientKey] = new net.Socket();
-            this.client.connect(this.port, this.host);
-            this.client.on('data', function(data) {
-                if (data[0] == 0x53) {
-                    var dataString = data.toString();
-                    dataString = dataString.substr(dataString.indexOf("&f")+1);
-                    for (var i = 1; i < dataString.length && i < 13; i++){
-                        switchStates[i] = (dataString[i] == '1');
-                    }
-                }
-            });
-        }
+        this.connect(true);
 
         this.service = new Service.Switch(this.name);
     }
+
+    connect (init) {
+        var clientKey = this.host + ":" + this.port;
+        if (init === true) {
+            if (clientKey in clients) {
+                this.client = clients[clientKey];
+                return;
+            }
+        }
+        console.log('Connecting...');
+        this.client = clients[clientKey] = new net.Socket();
+        this.client.connect(this.port, this.host);
+        this.client.on('data', function(data) {
+            if (data[0] == 0x53) {
+                var dataString = data.toString();
+                dataString = dataString.substr(dataString.indexOf("&f")+1);
+                for (var i = 1; i < dataString.length && i < 13; i++){
+                    switchStates[i] = (dataString[i] == '1');
+                }
+            }
+        });
+        this.client.on('close', function(){
+            console.log('Connection closed');
+            this.connect();
+        });
+    }
+
     tcpRequest (value, callback) {
         try {
             var arr = [];
@@ -51,7 +64,7 @@ class TcpSwitch {
             this.client.write(new Uint8Array(arr)); 
         } catch (error) {
             console.log('Reconnecting...');
-            this.client.connect(this.port, this.host);
+            this.connect();
         }
     }
 
