@@ -66,6 +66,10 @@ TcpSwitch.prototype = {
             console.log("====");
             var switchValue = result[1] & 0x0F;
             var switchStatus = result[2] & 0x0F == 0x0e;
+            console.log(switchValue);
+            console.log(switchStatus);
+            console.log(targetService);
+            console.log('----');
             targetService.getCharacteristic(Characteristic.On).setValue(switchStatus, undefined, funcContext);
         }.bind(this));
     },
