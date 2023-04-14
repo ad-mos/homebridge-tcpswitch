@@ -1,12 +1,13 @@
 'use strict';
 
-let Service, Characteristic;
-import { Socket } from 'net';
+var Service;
+var Characteristic;
+var net = require('net');
 var clients = {};
 var responseCallback = function() {};
 var switchStates = {};
 
-export default function (homebridge) {
+module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     homebridge.registerAccessory('homebridge-tcpswitch', 'TcpSwitch', TcpSwitch);
@@ -26,7 +27,7 @@ class TcpSwitch {
         if (clientKey in clients)
             this.client = clients[clientKey];
         else {
-            this.client = clients[clientKey] = new Socket();
+            this.client = clients[clientKey] = new net.Socket();
             this.client.connect(this.port, this.host);
             this.client.on('data', function(data) {
                 console.log(data.toString());
