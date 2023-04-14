@@ -52,9 +52,10 @@ class TcpSwitch {
                 responseCallback(data);
             }
         });
+        var $this = this;
         this.client.on('close', function(){
-            this.log('Connection closed');
-            this.connect();
+            $this.log('Connection closed');
+            $this.connect();
         });
     }
 
