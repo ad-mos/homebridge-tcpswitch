@@ -31,6 +31,7 @@ class TcpSwitch {
     }
 
     connect (init) {
+        var $this = this;
         var clientKey = this.host + ":" + this.port;
         if (init === true) {
             if (clientKey in clients) {
@@ -48,6 +49,7 @@ class TcpSwitch {
         this.client.connect(this.port, this.host);
         this.client.on('data', function(data) {
             if (data[0] == 0x53) {
+                $this.log("Initialization Message received");
                 var dataString = data.toString();
                 dataString = dataString.substr(dataString.indexOf("&f")+1);
                 for (var i = 1; i < dataString.length && i < 13; i++){
@@ -58,7 +60,6 @@ class TcpSwitch {
             }
         });
         if(init) {
-            var $this = this;
             this.client.on('close', function(){
                 $this.log('Connection closed. Reconnecting...');
                 $this.connect();
