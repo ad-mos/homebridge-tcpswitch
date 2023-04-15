@@ -2,9 +2,9 @@
 
 var Service;
 var Characteristic;
-const { throws } = require('assert');
 var net = require('net');
 var clients = {};
+var reconnectTimeout = {};
 var switchStates = {};
 var responseCallback = function() {};
 
@@ -39,6 +39,11 @@ class TcpSwitch {
             }
         }
         this.log('Connecting...');
+        if (reconnectTimeout[clientKey] !== undefined) {
+            clearInterval(reconnectTimeout[clientKey]);
+            reconnectTimeout[clientKey] = undefined;
+        }
+        reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 5 * 60 * 1000);
         this.client = clients[clientKey] = new net.Socket();
         this.client.connect(this.port, this.host);
         this.client.on('data', function(data) {
