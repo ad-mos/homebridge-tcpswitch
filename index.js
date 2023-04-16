@@ -74,7 +74,7 @@ class TcpSwitch {
 
     tcpRequest (value, callback) {
         responseCallback = callback;
-        $this = this;
+        var $this = this;
         try {
             var arr = [];
             if (value < 10)
