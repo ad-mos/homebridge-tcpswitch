@@ -4,7 +4,7 @@ var Service;
 var Characteristic;
 var net = require('net');
 var clients = {};
-var reconnectTimeout = {};
+var healthCheckTimeout = {};
 var switchStates = {};
 var responseCallback = function() {};
 
@@ -24,6 +24,7 @@ class TcpSwitch {
         this.port                = config.port || 6269;
         this.value               = config.value || 1
         switchStates[this.value] = false;
+        this.clientKey           = this.host + ":" + this.port;
         //
         this.connect(true);
 
@@ -32,30 +33,20 @@ class TcpSwitch {
 
     connect (init) {
         var $this = this;
-        var clientKey = this.host + ":" + this.port;
         if (init === true) {
-            if (clientKey in clients) {
-                this.client = clients[clientKey];
+            if (this.clientKey in clients) {
+                this.client = clients[this.clientKey];
                 return;
             }
         }
         this.log('Connecting...');
-        // if (reconnectTimeout[clientKey] !== undefined) {
-        //     clearInterval(reconnectTimeout[clientKey]);
-        //     reconnectTimeout[clientKey] = undefined;
-        // }
-        // reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 1 * 60 * 1000);
-        this.client = clients[clientKey] = net.createConnection({
+        this.client = clients[this.clientKey] = net.createConnection({
             "port": this.port, 
             "host": this.host,
             "noDelay": true,
             "keepAlive": true
         }, function() {
             $this.log("Connected successfully");
-        });
-        this.client.on('error', function(error) {
-            $this.log("Error occured");
-            $this.log(error);
         });
         this.client.on('data', function(data) {
             if (data[0] == 0x53) {
@@ -66,6 +57,10 @@ class TcpSwitch {
                     switchStates[i] = (dataString[i] == '1');
                 }
             } else {
+                if ($this.clientKey in healthCheckTimeout && healthCheckTimeout[$this.clientKey] !== undefined) {
+                    clearTimeout(healthCheckTimeout[$this.clientKey]);
+                    healthCheckTimeout[$this.clientKey] = undefined;
+                }
                 responseCallback(data);
             }
         });
@@ -87,6 +82,10 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             var result = this.client.write(new Uint8Array(arr));
             this.log("Command written: " + result);
+            healthCheckTimeout[this.clientKey] = setTimeout(1000, function() {
+                $this.log('No response received. Destroying connection...');
+                $this.client.destroy();
+            });
         } catch (error) {
             this.log('Error writing. Destroyin connection...');
             this.client.destroy();
