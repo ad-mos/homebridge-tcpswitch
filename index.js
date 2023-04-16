@@ -53,6 +53,10 @@ class TcpSwitch {
         }, function() {
             $this.log("Connected successfully");
         });
+        this.client.on('error', function(error) {
+            $this.log("Error occured");
+            $this.log(error);
+        });
         this.client.on('data', function(data) {
             if (data[0] == 0x53) {
                 $this.log("Initialization Message received");
