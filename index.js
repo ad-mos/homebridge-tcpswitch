@@ -45,8 +45,7 @@ class TcpSwitch {
         //     reconnectTimeout[clientKey] = undefined;
         // }
         // reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 1 * 60 * 1000);
-        this.client = clients[clientKey] = new net.Socket();
-        this.client.connect({
+        this.client = clients[clientKey] = net.createConnection({
             "port": this.port, 
             "host": this.host,
             "noDelay": true,
