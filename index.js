@@ -44,9 +44,17 @@ class TcpSwitch {
             clearInterval(reconnectTimeout[clientKey]);
             reconnectTimeout[clientKey] = undefined;
         }
-        reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 5 * 60 * 1000);
+        reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 1 * 60 * 1000);
         this.client = clients[clientKey] = new net.Socket();
-        this.client.connect(this.port, this.host);
+        this.client.connect({
+            "port": this.port, 
+            "host": this.host,
+            "noDelay": true,
+            "keepAlive": true
+        }, function() {
+            $this.log("Connected successfully");
+        });
+        this.client()
         this.client.on('data', function(data) {
             if (data[0] == 0x53) {
                 $this.log("Initialization Message received");
@@ -75,7 +83,8 @@ class TcpSwitch {
                 arr = [0x72, 0x30 + value, 0x0a, 0x0a];
             else
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
-            this.client.write(new Uint8Array(arr)); 
+            var result = this.client.write(new Uint8Array(arr));
+            this.log("Command written: " + result);
         } catch (error) {
             this.log('Error writing. Destroyin connection...');
             this.client.destroy();
