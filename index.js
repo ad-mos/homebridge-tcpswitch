@@ -75,6 +75,13 @@ class TcpSwitch {
     tcpRequest (value, callback) {
         responseCallback = callback;
         var $this = this;
+        if (healthCheckTimeout[this.clientKey] === undefined) {
+            healthCheckTimeout[this.clientKey] = setTimeout(function() {
+                $this.log('No response received. Destroying connection...');
+                healthCheckTimeout[this.clientKey] = undefined;
+                $this.client.destroy();
+            }, 1000);
+        }
         try {
             var arr = [];
             if (value < 10)
@@ -83,10 +90,6 @@ class TcpSwitch {
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
             var result = this.client.write(new Uint8Array(arr));
             this.log("Command written: " + result);
-            healthCheckTimeout[this.clientKey] = setTimeout(function() {
-                $this.log('No response received. Destroying connection...');
-                $this.client.destroy();
-            }, 1000);
         } catch (error) {
             this.log('Error writing. Destroyin connection...');
             this.client.destroy();

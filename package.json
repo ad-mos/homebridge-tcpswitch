@@ -1,6 +1,6 @@
 {
   "name": "homebridge-tcpswitch",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "author": "aildermi",
   "description": "Simple TCP switche for Homebridge - stateful switch",
   "license": "MIT",
