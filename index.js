@@ -40,11 +40,11 @@ class TcpSwitch {
             }
         }
         this.log('Connecting...');
-        if (reconnectTimeout[clientKey] !== undefined) {
-            clearInterval(reconnectTimeout[clientKey]);
-            reconnectTimeout[clientKey] = undefined;
-        }
-        reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 1 * 60 * 1000);
+        // if (reconnectTimeout[clientKey] !== undefined) {
+        //     clearInterval(reconnectTimeout[clientKey]);
+        //     reconnectTimeout[clientKey] = undefined;
+        // }
+        // reconnectTimeout[clientKey] = setTimeout(() => { clients[clientKey].destroy(); }, 1 * 60 * 1000);
         this.client = clients[clientKey] = new net.Socket();
         this.client.connect({
             "port": this.port, 
