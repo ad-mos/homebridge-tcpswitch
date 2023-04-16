@@ -43,8 +43,7 @@ class TcpSwitch {
         this.client = clients[this.clientKey] = net.createConnection({
             "port": this.port, 
             "host": this.host,
-            "noDelay": true,
-            "keepAlive": true
+            "noDelay": true
         }, function() {
             $this.log("Connected successfully");
         });
