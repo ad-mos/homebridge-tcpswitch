@@ -42,7 +42,7 @@ class TcpSwitch {
                 statusClient.destroy();
             }
         });    
-        setTimeout(this.readStatus, 5 * 60 * 1000);
+        setTimeout(this.readStatus.bind(this), 5 * 60 * 1000);
     }
 
     tcpRequest (value, callback) {
