@@ -24,26 +24,23 @@ class TcpSwitch {
         //
         this.service = new Service.Switch(this.name);
 
-        this.readStatus();
-    }
-
-    readStatus () {
-        var statusClient = net.createConnection({
-            "port": this.port, 
-            "host": this.host,
-            "noDelay": true
-        });
-        statusClient.on('data', function(data) {
-            if (data[0] == 0x53) {
-                var dataString = data.toString();
-                dataString = dataString.substr(dataString.indexOf("&f")+1);
-                for (var i = 1; i < dataString.length && i < 13; i++){
-                    switchStates[i] = (dataString[i] == '1');
+        setInterval(function() {
+            var statusClient = net.createConnection({
+                "port": this.port, 
+                "host": this.host,
+                "noDelay": true
+            });
+            statusClient.on('data', function(data) {
+                if (data[0] == 0x53) {
+                    var dataString = data.toString();
+                    dataString = dataString.substr(dataString.indexOf("&f")+1);
+                    for (var i = 1; i < dataString.length && i < 13; i++){
+                        switchStates[i] = (dataString[i] == '1');
+                    }
+                    statusClient.destroy();
                 }
-                statusClient.destroy();
-            }
-        });    
-        setTimeout(this.readStatus, 5 * 60 * 1000);
+            });    
+        }, 5 * 60 * 1000);
     }
 
     tcpRequest (value, callback) {
