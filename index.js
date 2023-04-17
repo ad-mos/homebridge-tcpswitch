@@ -3,10 +3,7 @@
 var Service;
 var Characteristic;
 var net = require('net');
-var clients = {};
-var healthCheckTimeout = {};
 var switchStates = {};
-var responseCallback = function() {};
 
 
 module.exports = function (homebridge) {
@@ -24,26 +21,20 @@ class TcpSwitch {
         this.port                = config.port || 6269;
         this.value               = config.value || 1
         switchStates[this.value] = false;
-        this.clientKey           = this.host + ":" + this.port;
         //
-        this.connect(true);
-
         this.service = new Service.Switch(this.name);
     }
 
-    connect (init) {
-        var $this = this;
-        if (init === true && this.clientKey in clients)
-            return;
-        this.log('Connecting...');
-        clients[this.clientKey] = net.createConnection({
+    tcpRequest (value, callback) {
+        $this = this;
+        var client = net.createConnection({
             "port": this.port, 
             "host": this.host,
             "noDelay": true
         }, function() {
             $this.log("Connected successfully");
         });
-        clients[this.clientKey].on('data', function(data) {
+        client.on('data', function(data) {
             if (data[0] == 0x53) {
                 $this.log("Initialization Message received");
                 var dataString = data.toString();
@@ -51,44 +42,21 @@ class TcpSwitch {
                 for (var i = 1; i < dataString.length && i < 13; i++){
                     switchStates[i] = (dataString[i] == '1');
                 }
+                setTimeout(function() {
+                    var arr = [];
+                    if (value < 10)
+                        arr = [0x72, 0x30 + value, 0x0a, 0x0a];
+                    else
+                        arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
+                    var result = client.write(new Uint8Array(arr));
+                    $this.log("Command written: " + result);
+                    client.destroy();
+                    $this.log("Connection destroyed");
+                }, 250);
             } else {
-                if ($this.clientKey in healthCheckTimeout && healthCheckTimeout[$this.clientKey] !== undefined) {
-                    clearTimeout(healthCheckTimeout[$this.clientKey]);
-                    healthCheckTimeout[$this.clientKey] = undefined;
-                }
-                responseCallback(data);
+                callback(data);
             }
         });
-        if(init) {
-            clients[this.clientKey].on('close', function(){
-                $this.log('Connection closed. Reconnecting...');
-                $this.connect();
-            });
-        }
-    }
-
-    tcpRequest (value, callback) {
-        responseCallback = callback;
-        var $this = this;
-        if (healthCheckTimeout[this.clientKey] === undefined) {
-            healthCheckTimeout[this.clientKey] = setTimeout(function() {
-                $this.log('No response received. Ending connection...');
-                healthCheckTimeout[$this.clientKey] = undefined;
-                clients[$this.clientKey].end();
-            }, 1000);
-        }
-        try {
-            var arr = [];
-            if (value < 10)
-                arr = [0x72, 0x30 + value, 0x0a, 0x0a];
-            else
-                arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
-            var result = clients[this.clientKey].write(new Uint8Array(arr));
-            this.log("Command written: " + result);
-        } catch (error) {
-            this.log('Error writing. Ending connection...');
-            clients[this.clientKey].end();
-        }
     }
 
     getServices () {
