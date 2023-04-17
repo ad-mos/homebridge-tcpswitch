@@ -1,6 +1,6 @@
 {
   "name": "homebridge-tcpswitch",
-  "version": "0.1.40",
+  "version": "0.1.42",
   "author": "aildermi",
   "description": "Simple TCP switche for Homebridge - stateful switch",
   "license": "MIT",
@@ -19,9 +19,7 @@
     "node": ">=0.12.0",
     "homebridge": ">=0.2.0"
   },
-  "dependencies": {
-    "async-mutex": "^0.4.0"
-  },
+  "dependencies": {},
   "bugs": {
     "url": "https://github.com/aildermi/homebridge-tcpswitch/issues"
   }

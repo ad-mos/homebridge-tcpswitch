@@ -4,9 +4,6 @@ var Service;
 var Characteristic;
 var net = require('net');
 var switchStates = {};
-var Mutex = require('async-mutex').Mutex;
-const mutex = new Mutex();
-
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -54,7 +51,6 @@ class TcpSwitch {
             "host": this.host,
             "noDelay": true
         });
-        var cancel = null;
         client.on('data', function(data) {
             if (data[0] == 0x53) {
                 var dataString = data.toString();
@@ -69,13 +65,8 @@ class TcpSwitch {
                     else
                         arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
                     client.write(new Uint8Array(arr));
-                    cancel = setTimeout(function(){
-                        callback(false);
-                    }, 1000);
                 }, 250);
             } else {
-                clearTimeout(cancel);
-                cancel = null;
                 client.destroy();
                 callback(data);
             }
@@ -95,20 +86,15 @@ class TcpSwitch {
     }
 
     setOnCharacteristicHandler (value, callback) {
-        var $this = this;
-        mutex
-            .acquire()
-            .then(function(release) {
-                $this.tcpRequest($this.value, function(result){
-                    if (result !== false) {
-                        var switchValue = result[1] & 0x0F;
-                        var switchState = (result[2] & 0x0F) == 0x0e;
-                        switchStates[switchValue] = switchState;
-                        callback(null);
-                    }
-                    release();
-                });        
-            });
+        this.tcpRequest($this.value, function(result){
+            if (result !== false) {
+                var switchValue = result[1] & 0x0F;
+                var switchState = (result[2] & 0x0F) == 0x0e;
+                switchStates[switchValue] = switchState;
+                callback(null);
+            }
+            release();
+        });        
     }
 
     getOnCharacteristicHandler (callback) {
