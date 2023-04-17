@@ -54,8 +54,8 @@ class TcpSwitch {
             "host": this.host,
             "noDelay": true
         });
+        var cancel = null;
         client.on('data', function(data) {
-            var cancel = null;
             if (data[0] == 0x53) {
                 var dataString = data.toString();
                 dataString = dataString.substr(dataString.indexOf("&f")+1);
