@@ -33,21 +33,17 @@ class TcpSwitch {
 
     connect (init) {
         var $this = this;
-        if (init === true) {
-            if (this.clientKey in clients) {
-                this.client = clients[this.clientKey];
-                return;
-            }
-        }
+        if (init === true && this.clientKey in clients)
+            return;
         this.log('Connecting...');
-        this.client = clients[this.clientKey] = net.createConnection({
+        clients[this.clientKey] = net.createConnection({
             "port": this.port, 
             "host": this.host,
             "noDelay": true
         }, function() {
             $this.log("Connected successfully");
         });
-        this.client.on('data', function(data) {
+        clients[this.clientKey].on('data', function(data) {
             if (data[0] == 0x53) {
                 $this.log("Initialization Message received");
                 var dataString = data.toString();
@@ -64,7 +60,7 @@ class TcpSwitch {
             }
         });
         if(init) {
-            this.client.on('close', function(){
+            clients[this.clientKey].on('close', function(){
                 $this.log('Connection closed. Reconnecting...');
                 $this.connect();
             });
@@ -77,8 +73,8 @@ class TcpSwitch {
         if (healthCheckTimeout[this.clientKey] === undefined) {
             healthCheckTimeout[this.clientKey] = setTimeout(function() {
                 $this.log('No response received. Destroying connection...');
-                healthCheckTimeout[this.clientKey] = undefined;
-                $this.client.destroy();
+                healthCheckTimeout[$this.clientKey] = undefined;
+                clients[$this.clientKey].destroy();
             }, 1000);
         }
         try {
@@ -87,11 +83,11 @@ class TcpSwitch {
                 arr = [0x72, 0x30 + value, 0x0a, 0x0a];
             else
                 arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
-            var result = this.client.write(new Uint8Array(arr));
+            var result = clients[this.clientKey].write(new Uint8Array(arr));
             this.log("Command written: " + result);
         } catch (error) {
             this.log('Error writing. Destroyin connection...');
-            this.client.destroy();
+            clients[this.clientKey].destroy();
         }
     }
 
