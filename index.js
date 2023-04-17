@@ -23,20 +23,37 @@ class TcpSwitch {
         switchStates[this.value] = false;
         //
         this.service = new Service.Switch(this.name);
+
+        this.readStatus();
+    }
+
+    readStatus () {
+        var statusClient = net.createConnection({
+            "port": this.port, 
+            "host": this.host,
+            "noDelay": true
+        });
+        statusClient.on('data', function(data) {
+            if (data[0] == 0x53) {
+                var dataString = data.toString();
+                dataString = dataString.substr(dataString.indexOf("&f")+1);
+                for (var i = 1; i < dataString.length && i < 13; i++){
+                    switchStates[i] = (dataString[i] == '1');
+                }
+                statusClient.destroy();
+            }
+        });    
+        setTimeout(this.readStatus, 5 * 60 * 1000);
     }
 
     tcpRequest (value, callback) {
-        var $this = this;
         var client = net.createConnection({
             "port": this.port, 
             "host": this.host,
             "noDelay": true
-        }, function() {
-            $this.log("Connected successfully");
         });
         client.on('data', function(data) {
             if (data[0] == 0x53) {
-                $this.log("Initialization Message received");
                 var dataString = data.toString();
                 dataString = dataString.substr(dataString.indexOf("&f")+1);
                 for (var i = 1; i < dataString.length && i < 13; i++){
@@ -49,12 +66,9 @@ class TcpSwitch {
                     else
                         arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
                     var result = client.write(new Uint8Array(arr));
-                    $this.log("Command written: " + result);
                 }, 250);
             } else {
-                $this.log("Response received");
                 client.destroy();
-                $this.log("Connection destroyed");
                 callback(data);
             }
         });
