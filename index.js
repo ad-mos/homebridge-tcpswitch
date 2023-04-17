@@ -26,8 +26,8 @@ class TcpSwitch {
 
         setInterval(function() {
             var statusClient = net.createConnection({
-                "port": this.port, 
-                "host": this.host,
+                "port": config.port, 
+                "host": config.host,
                 "noDelay": true
             });
             statusClient.on('data', function(data) {
@@ -40,7 +40,7 @@ class TcpSwitch {
                     statusClient.destroy();
                 }
             });    
-        }, 5 * 60 * 1000);
+        }, 1 * 60 * 1000);
     }
 
     tcpRequest (value, callback) {
