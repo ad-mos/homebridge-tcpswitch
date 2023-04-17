@@ -50,10 +50,11 @@ class TcpSwitch {
                         arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
                     var result = client.write(new Uint8Array(arr));
                     $this.log("Command written: " + result);
-                    client.destroy();
-                    $this.log("Connection destroyed");
                 }, 250);
             } else {
+                $this.log("Response received");
+                client.destroy();
+                $this.log("Connection destroyed");
                 callback(data);
             }
         });
