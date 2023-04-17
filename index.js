@@ -72,9 +72,9 @@ class TcpSwitch {
         var $this = this;
         if (healthCheckTimeout[this.clientKey] === undefined) {
             healthCheckTimeout[this.clientKey] = setTimeout(function() {
-                $this.log('No response received. Destroying connection...');
+                $this.log('No response received. Ending connection...');
                 healthCheckTimeout[$this.clientKey] = undefined;
-                clients[$this.clientKey].destroy();
+                clients[$this.clientKey].end();
             }, 1000);
         }
         try {
@@ -86,8 +86,8 @@ class TcpSwitch {
             var result = clients[this.clientKey].write(new Uint8Array(arr));
             this.log("Command written: " + result);
         } catch (error) {
-            this.log('Error writing. Destroyin connection...');
-            clients[this.clientKey].destroy();
+            this.log('Error writing. Ending connection...');
+            clients[this.clientKey].end();
         }
     }
 
