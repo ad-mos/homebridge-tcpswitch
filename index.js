@@ -26,7 +26,7 @@ class TcpSwitch {
     }
 
     tcpRequest (value, callback) {
-        $this = this;
+        var $this = this;
         var client = net.createConnection({
             "port": this.port, 
             "host": this.host,
