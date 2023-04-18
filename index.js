@@ -19,6 +19,7 @@ class TcpSwitch {
     static switchStates = {};
     static reTimeout = null;
     static writeTimeout = null;
+    static responseCallback = {};
     constructor (log, config) {
         this.log = log;
 
@@ -72,10 +73,11 @@ class TcpSwitch {
                     var switchValue = data[1] & 0x0F;
                     var switchState = (data[2] & 0x0F) == 0x0e;
                     TcpSwitch.switchStates[switchValue] = switchState;
-                    TcpSwitch.responseCallback(null);
-                    clearTimeout(TcpSwitch.writeTimeout);
-                    $this.log("WriteMutex: data received. releasing write lock");
-                    TcpSwitch.writeMutex.release();
+                    if (switchValue in TcpSwitch.responseCallback)
+                        TcpSwitch.responseCallback[switchValue](null);
+                    // clearTimeout(TcpSwitch.writeTimeout);
+                    // $this.log("WriteMutex: data received. releasing write lock");
+                    // TcpSwitch.writeMutex.release();
                 }
             });
             TcpSwitch.client.on('close', function() {
@@ -88,15 +90,16 @@ class TcpSwitch {
 
     tcpRequest (value, callback) {
         this.connect();
-        TcpSwitch.writeMutex.acquire();
-        this.log("WriteMutex: Locked for write");
+        // TcpSwitch.writeMutex.acquire();
+        TcpSwitch.responseCallback[this.value] = callback;
+        // this.log("WriteMutex: Locked for write");
         var $this = this;
-        TcpSwitch.writeTimeout = setTimeout(function() {
-            $this.log("WriteMutex: Write timed out. releasing write lock");
-            TcpSwitch.writeMutex.release();
-        }, 1000);
+        // TcpSwitch.writeTimeout = setTimeout(function() {
+        //     $this.log("WriteMutex: Write timed out. releasing write lock");
+        //     TcpSwitch.responseCallback[$this.value](-1);
+        //     TcpSwitch.writeMutex.release();
+        // }, 10000);
 
-        TcpSwitch.responseCallback = callback;
         var arr = [];
         if (value < 10)
             arr = [0x72, 0x30 + value, 0x0a, 0x0a];
