@@ -57,7 +57,7 @@ class TcpSwitch {
                     var dataString = data.toString();
                     dataString = dataString.substr(dataString.indexOf("&f")+1);
                     for (var i = 1; i < dataString.length && i < 13; i++){
-                        switchStates[i] = (dataString[i] == '1');
+                        TcpSwitch.switchStates[i] = (dataString[i] == '1');
                     }
                     // Disable auto release
                     clearTimeout(TcpSwitch.reTimeout);
@@ -113,6 +113,6 @@ class TcpSwitch {
     }
 
     getOnCharacteristicHandler (callback) {
-        callback(null, switchStates[this.value]);
+        callback(null, TcpSwitch.switchStates[this.value]);
     }
 }
