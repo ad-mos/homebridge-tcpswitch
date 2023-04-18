@@ -35,10 +35,10 @@ class TcpSwitch {
     }
 
     async connect() {
+        await TcpSwitch.mutex.acquire();
         if (TcpSwitch.client === null) {
             var $this = this;
             $this.log("Mutex: Locked for connecting");
-            await TcpSwitch.mutex.acquire();
             // Release after a while if nothing happend
             TcpSwitch.reTimeout = setTimeout(function() {
                 $this.log("Mutex: connection timed out. Releasing connection");
@@ -85,6 +85,8 @@ class TcpSwitch {
                 TcpSwitch.client = null;
                 $this.connect();
             })
+        } else {
+            TcpSwitch.mutex.release();
         }
     }
 
