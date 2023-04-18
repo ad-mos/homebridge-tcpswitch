@@ -3,7 +3,8 @@
 var Service;
 var Characteristic;
 var net = require('net');
-var switchStates = {};
+var Mutex = require('async-mutex').Mutex;
+
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -12,6 +13,12 @@ module.exports = function (homebridge) {
 };
 
 class TcpSwitch {
+    static client = null;
+    static mutex = new Mutex();
+    static writeMutex = new Mutex();
+    static switchStates = {};
+    static reTimeout = null;
+    static writeTimeout = null;
     constructor (log, config) {
         this.log = log;
 
@@ -19,58 +26,74 @@ class TcpSwitch {
         this.host                = config.host;
         this.port                = config.port || 6269;
         this.value               = config.value || 1
-        switchStates[this.value] = false;
+        TcpSwitch.switchStates[this.value] = false;
         //
         this.service = new Service.Switch(this.name);
-        if (config.value === 1)
-            this.readStatus();
+        
+        this.connect();
     }
 
-    readStatus () {
-        var statusClient = net.createConnection({
-            "port": this.port, 
-            "host": this.host,
-            "noDelay": true
-        });
-        statusClient.on('data', function(data) {
-            if (data[0] == 0x53) {
-                var dataString = data.toString();
-                dataString = dataString.substr(dataString.indexOf("&f")+1);
-                for (var i = 1; i < dataString.length && i < 13; i++){
-                    switchStates[i] = (dataString[i] == '1');
+    connect() {
+        if (TcpSwitch.client === null) {
+            TcpSwitch.mutex.acquire();
+            // Release after a while if nothing happend
+            TcpSwitch.reTimeout = setTimeout(function() {
+                TcpSwitch.reTimeout = null;
+                if (TcpSwitch.client !== null) {
+                    TcpSwitch.client.destroy();
                 }
-                statusClient.destroy();
-            }
-        });    
-        setTimeout(this.readStatus.bind(this), 5 * 60 * 1000);
+                TcpSwitch.mutex.release();
+            }, 1000);
+            // Connect
+            var $this = this;
+            TcpSwitch.client = net.createConnection({
+                "port": this.port, 
+                "host": this.host,
+                "noDelay": true,
+                "keepAlive": true
+            });
+            TcpSwitch.client.on('data', function(data) {
+                if (data[0] == 0x53) {
+                    var dataString = data.toString();
+                    dataString = dataString.substr(dataString.indexOf("&f")+1);
+                    for (var i = 1; i < dataString.length && i < 13; i++){
+                        switchStates[i] = (dataString[i] == '1');
+                    }
+                    // Disable auto release
+                    clearTimeout(TcpSwitch.reTimeout);
+                    setTimeout(function() {
+                        TcpSwitch.mutex.release();
+                    }, 250);
+                } else {
+                    var switchValue = data[1] & 0x0F;
+                    var switchState = (data[2] & 0x0F) == 0x0e;
+                    TcpSwitch.switchStates[switchValue] = switchState;
+                    TcpSwitch.responseCallback(null);
+                    clearTimeout(TcpSwitch.writeTimeout);
+                    TcpSwitch.writeMutex.release();
+                }
+            });
+            TcpSwitch.client.on('close', function() {
+                TcpSwitch.client = null;
+                $this.connect();
+            })
+        }
     }
 
     tcpRequest (value, callback) {
-        var client = net.createConnection({
-            "port": this.port, 
-            "host": this.host,
-            "noDelay": true
-        });
-        client.on('data', function(data) {
-            if (data[0] == 0x53) {
-                var dataString = data.toString();
-                dataString = dataString.substr(dataString.indexOf("&f")+1);
-                for (var i = 1; i < dataString.length && i < 13; i++){
-                    switchStates[i] = (dataString[i] == '1');
-                }
-                setTimeout(function() {
-                    var arr = [];
-                    if (value < 10)
-                        arr = [0x72, 0x30 + value, 0x0a, 0x0a];
-                    else
-                        arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
-                    client.write(new Uint8Array(arr));
-                }, 250);
-            } else {
-                client.destroy();
-                callback(data);
-            }
-        });
+        this.connect();
+        TcpSwitch.writeMutex.acquire();
+        TcpSwitch.writeTimeout = setTimeout(function() {
+            TcpSwitch.writeMutex.release();
+        }, 1000);
+
+        TcpSwitch.responseCallback = callback;
+        var arr = [];
+        if (value < 10)
+            arr = [0x72, 0x30 + value, 0x0a, 0x0a];
+        else
+            arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
+        TcpSwitch.client.write(new Uint8Array(arr));
     }
 
     getServices () {
@@ -86,12 +109,7 @@ class TcpSwitch {
     }
 
     setOnCharacteristicHandler (value, callback) {
-        this.tcpRequest(this.value, function(result){
-            var switchValue = result[1] & 0x0F;
-            var switchState = (result[2] & 0x0F) == 0x0e;
-            switchStates[switchValue] = switchState;
-            callback(null);
-        });        
+        this.tcpRequest(this.value, callback);        
     }
 
     getOnCharacteristicHandler (callback) {
