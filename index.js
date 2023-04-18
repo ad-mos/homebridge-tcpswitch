@@ -109,7 +109,7 @@ class TcpSwitch {
         setTimeout(function() { 
             TcpSwitch.writeMutex.release();
             $this.log("WriteMutex: Released write");
-        }, 100);
+        }, 500);
     }
 
     getServices () {
