@@ -90,9 +90,9 @@ class TcpSwitch {
 
     tcpRequest (value, callback) {
         this.connect();
-        // TcpSwitch.writeMutex.acquire();
+        TcpSwitch.writeMutex.acquire();
         TcpSwitch.responseCallback[this.value] = callback;
-        // this.log("WriteMutex: Locked for write");
+        this.log("WriteMutex: Locked for write");
         var $this = this;
         // TcpSwitch.writeTimeout = setTimeout(function() {
         //     $this.log("WriteMutex: Write timed out. releasing write lock");
@@ -106,6 +106,10 @@ class TcpSwitch {
         else
             arr = [0x72, 0x31, 0x30 + value - 10, 0x0a, 0x0a];
         TcpSwitch.client.write(new Uint8Array(arr));
+        setTimeout(function() { 
+            TcpSwitch.writeMutex.release();
+            $this.log("WriteMutex: Released write");
+        }, 100);
     }
 
     getServices () {
