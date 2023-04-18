@@ -41,17 +41,17 @@ class TcpSwitch {
             }
             TcpSwitch.writeMutex.release();
             TcpSwitch.mutex.release();
-        }, 1 * 60 * 1000);
+        }, 15 * 60 * 1000);
     }
 
     async connect() {
         await TcpSwitch.mutex.acquire();
         if (TcpSwitch.client === null) {
             var $this = this;
-            $this.log("Mutex: Locked for connecting");
+            // $this.log("Mutex: Locked for connecting");
             // Release after a while if nothing happend
             TcpSwitch.reTimeout = setTimeout(function() {
-                $this.log("Mutex: connection timed out. Releasing connection");
+                // $this.log("Mutex: connection timed out. Releasing connection");
                 TcpSwitch.reTimeout = null;
                 if (TcpSwitch.client !== null) {
                     TcpSwitch.client.destroy();
@@ -67,7 +67,7 @@ class TcpSwitch {
             });
             TcpSwitch.client.on('data', function(data) {
                 if (data[0] == 0x53) {
-                    $this.log("Initial message received.");
+                    // $this.log("Initial message received.");
                     var dataString = data.toString();
                     dataString = dataString.substr(dataString.indexOf("&f")+1);
                     for (var i = 1; i < dataString.length && i < 13; i++){
@@ -76,7 +76,7 @@ class TcpSwitch {
                     // Disable auto release
                     clearTimeout(TcpSwitch.reTimeout);
                     setTimeout(function() {
-                        $this.log("Mutex: Released connecting");
+                        // $this.log("Mutex: Released connecting");
                         TcpSwitch.mutex.release();
                     }, 250);
                 } else {
@@ -91,7 +91,7 @@ class TcpSwitch {
                 }
             });
             TcpSwitch.client.on('close', function() {
-                $this.log("Connection closed. Reconnecting...")
+                // $this.log("Connection closed. Reconnecting...")
                 TcpSwitch.client = null;
                 setTimeout(function() {
                     $this.connect();
@@ -106,8 +106,8 @@ class TcpSwitch {
         this.connect();
         await TcpSwitch.writeMutex.acquire();
         TcpSwitch.responseCallback[this.value] = callback;
-        this.log("WriteMutex: Locked for write");
-        var $this = this;
+        // this.log("WriteMutex: Locked for write");
+        // var $this = this;
         var arr = [];
         if (value < 10)
             arr = [0x72, 0x30 + value, 0x0a, 0x0a];
@@ -116,7 +116,7 @@ class TcpSwitch {
         TcpSwitch.client.write(new Uint8Array(arr));
         setTimeout(function() { 
             TcpSwitch.writeMutex.release();
-            $this.log("WriteMutex: Released write");
+            // $this.log("WriteMutex: Released write");
         }, 250);
     }
 
@@ -133,7 +133,7 @@ class TcpSwitch {
     }
 
     setOnCharacteristicHandler (value, callback) {
-        this.log("Switch triggered: switch (" + this.value + ") to state (" + value + "). currently (" + TcpSwitch.switchStates[this.value] + ")");
+        // this.log("Switch triggered: switch (" + this.value + ") to state (" + value + "). currently (" + TcpSwitch.switchStates[this.value] + ")");
         if (value !== TcpSwitch.switchStates[this.value])
             this.tcpRequest(this.value, callback);
         else
