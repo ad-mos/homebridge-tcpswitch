@@ -35,8 +35,10 @@ class TcpSwitch {
         setInterval(async function() {
             await TcpSwitch.mutex.acquire();
             await TcpSwitch.writeMutex.acquire();
-            TcpSwitch.client.destroy();
-            TcpSwitch.client = null;
+            if (TcpSwitch.client !== null) {
+                TcpSwitch.client.destroy();
+                TcpSwitch.client = null;
+            }
             TcpSwitch.writeMutex.release();
             TcpSwitch.mutex.release();
         }, 1 * 60 * 1000);
@@ -91,7 +93,9 @@ class TcpSwitch {
             TcpSwitch.client.on('close', function() {
                 $this.log("Connection closed. Reconnecting...")
                 TcpSwitch.client = null;
-                $this.connect();
+                setTimeout(function() {
+                    $this.connect();
+                }, 1000);
             })
         } else {
             TcpSwitch.mutex.release();
