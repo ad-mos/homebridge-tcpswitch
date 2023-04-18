@@ -122,7 +122,10 @@ class TcpSwitch {
 
     setOnCharacteristicHandler (value, callback) {
         this.log("Switch triggered: switch (" + this.value + ") to state (" + value + "). currently (" + TcpSwitch.switchStates[this.value] + ")");
-        this.tcpRequest(this.value, callback);        
+        if (value !== TcpSwitch.switchStates[this.value])
+            this.tcpRequest(this.value, callback);
+        else
+            callback(null);
     }
 
     getOnCharacteristicHandler (callback) {
