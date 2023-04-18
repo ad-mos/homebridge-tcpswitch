@@ -32,6 +32,13 @@ class TcpSwitch {
         this.service = new Service.Switch(this.name);
         
         this.connect();
+        setInterval(async function() {
+            await TcpSwitch.mutex.acquire();
+            await TcpSwitch.writeMutex.acquire();
+            TcpSwitch.client.destroy();
+            TcpSwitch.writeMutex.release();
+            TcpSwitch.mutex.release();
+        }, 1 * 60 * 1000);
     }
 
     async connect() {
