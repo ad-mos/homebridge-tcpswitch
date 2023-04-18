@@ -36,6 +36,7 @@ class TcpSwitch {
             await TcpSwitch.mutex.acquire();
             await TcpSwitch.writeMutex.acquire();
             TcpSwitch.client.destroy();
+            TcpSwitch.client = null;
             TcpSwitch.writeMutex.release();
             TcpSwitch.mutex.release();
         }, 1 * 60 * 1000);
