@@ -83,8 +83,10 @@ class TcpSwitch {
                     var switchValue = data[1] & 0x0F;
                     var switchState = (data[2] & 0x0F) == 0x0e;
                     TcpSwitch.switchStates[switchValue] = switchState;
-                    if (switchValue in TcpSwitch.responseCallback)
+                    if (switchValue in TcpSwitch.responseCallback) {
                         TcpSwitch.responseCallback[switchValue](null);
+                        TcpSwitch.responseCallback[switchValue] = function() {};
+                    }
                     // clearTimeout(TcpSwitch.writeTimeout);
                     // $this.log("WriteMutex: data received. releasing write lock");
                     // TcpSwitch.writeMutex.release();
