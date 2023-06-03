@@ -1,13 +1,13 @@
 {
   "name": "homebridge-tcpswitch",
   "version": "0.3.1",
-  "author": "aildermi",
-  "description": "Simple TCP switche for Homebridge - stateful switch",
+  "author": "ad-mos",
+  "description": "Simple TCP switch for Homebridge",
   "license": "MIT",
-  "homepage": "https://github.com/aildermi/homebridge-tcpswitch#readme",
+  "homepage": "https://github.com/ad-mos/homebridge-tcpswitch#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aildermi/homebridge-tcpswitch.git"
+    "url": "git+https://github.com/ad-mos/homebridge-tcpswitch.git"
   },
   "keywords": [
     "homebridge-plugin",
@@ -23,6 +23,6 @@
     "async-mutex": "^0.4.0"
   },
   "bugs": {
-    "url": "https://github.com/aildermi/homebridge-tcpswitch/issues"
+    "url": "https://github.com/ad-mos/homebridge-tcpswitch/issues"
   }
 }
